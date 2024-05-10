@@ -1,39 +1,38 @@
 import { Container, Overlay, Tooltip, Form, Button } from 'react-bootstrap'
 import { useRef, useState, useEffect } from 'react'
-// import { getSourceFilePath } from '../lib/config'
-// import { getStory } from './lib/stories'
 
 export default function App({ story }) {
-  // const story = getStory(sourcePath);
   const count = countCharacters(story.content);
   const [showTodos, setShowTodos] = useState(true)
   const [showNotes, setShowNotes] = useState(false)
   const [doubleSpace, setDoubleSpace] = useState(false)
   const text = stringify(story.content, { showTodos, showNotes })
 
-  const el = (
+  return (
     <Container className="mt-4">
       <div className="mt-2 mb-2">
+        {/* TODO extract controllers */}
         <span className='badge rounded-pill bg-secondary'>{count} 字</span>
         <CopyButton text={text} className='badge bg-primary ms-1'>
           Copy
         </CopyButton>
+        {/* TODO extract Form.Check */}
         <Form.Check type="switch" label="Show TODOs" checked={showTodos} onChange={() => { setShowTodos(!showTodos) }} />
         <Form.Check type="switch" label="Show notes" checked={showNotes} onChange={() => { setShowNotes(!showNotes) }} />
         <Form.Check type="switch" label="Double spacing" checked={doubleSpace} onChange={() => { setDoubleSpace(!doubleSpace) }} />
       </div>
-      <div>doubleSpace: {doubleSpace.toString()}</div>
+
       <h1>{story.title}</h1>
       <Content showTodos={showTodos} doubleSpace={doubleSpace}>{text}</Content>
     </Container >
-  )
-
-  return el;
+  );
 }
 
 //
 // Components
 //
+
+// TODO fix warnings
 
 function CopyButton({ text, children, className }) {
   const target = useRef(null)
@@ -81,6 +80,8 @@ function CopyButton({ text, children, className }) {
   return el;
 }
 
+// TODO extract this component
+
 function Content({ children, doubleSpace }) {
   const style = {
     whiteSpace: 'break-spaces',
@@ -98,14 +99,6 @@ function Content({ children, doubleSpace }) {
   )
 }
 
-//
-// Next.js framework
-//
-
-export async function getStaticProps() {
-  const story = getStory(getSourceFilePath())
-  return { props: { story } }
-}
 
 //
 // Utilities
@@ -113,20 +106,21 @@ export async function getStaticProps() {
 
 function countCharacters(content) {
   const count = content.children
-    .filter(node => node.type == 'paragraph')
+    .filter(node => node.type === 'paragraph')
 
     // count for each paragraph
     .reduce((count, node) => {
-      count += (node.children || [])
-        .filter(node => node.type == 'text')
+      const innerCount = count + (node.children || [])
+        .filter(node => node.type === 'text')
         // count inner texts
         .reduce((count, node) => count + node.value.length, 0)
-      return count
+      return innerCount
     }, 0)
 
   return count
 }
 
+// TODO extract this function
 function stringify(content, { showTodos, showNotes }) {
   const text = content.children
     .map(nodeToLines({ showTodos, showNotes }))
@@ -139,7 +133,7 @@ function stringify(content, { showTodos, showNotes }) {
 
 function nodeToLines({ showTodos, showNotes }) {
   return (node) => {
-    if (node.type == 'paragraph') {
+    if (node.type === 'paragraph') {
       const lines = (node.children || [])
         .map(node => {
           switch (node.type) {
@@ -155,11 +149,11 @@ function nodeToLines({ showTodos, showNotes }) {
       return lines
     }
 
-    if (node.type == 'leafDirective') {
+    if (node.type === 'leafDirective') {
       return renderLeafDirective(node, { showTodos, showNotes })
     }
 
-    if (node.type == 'containerDirective') {
+    if (node.type === 'containerDirective') {
       return renderContainerDirective(node, { showTodos, showNotes })
     }
 
@@ -179,29 +173,29 @@ function indent(paragraph, i) {
   if (['「', '―'].includes(paragraph[0])) {
     return paragraph
   }
-  return '　' + paragraph
+  return `　${paragraph}`
 }
 
 function renderTextDirective(node, { showTodos, showNotes }) {
-  if (node.name == 'todo' && showTodos) {
+  if (node.name === 'todo' && showTodos) {
     return `[TODO ${node.children[0].value || ''}]`
   }
 
-  if (node.name == 'note' && showNotes) {
+  if (node.name === 'note' && showNotes) {
     return `[NOTE ${node.children[0].value || ''}]`
   }
 }
 
 function renderLeafDirective(node, { showTodos, showNotes }) {
-  if (node.name == 'separator') {
+  if (node.name === 'separator') {
     return ['']
   }
 
-  if (node.name == 'todo' && showTodos) {
+  if (node.name === 'todo' && showTodos) {
     return [`[TODO ${node.children[0].value}]`]
   }
 
-  if (node.name == 'note' && showNotes) {
+  if (node.name === 'note' && showNotes) {
     return [`[NOTE ${node.children[0].value}]`]
   }
 
@@ -210,12 +204,12 @@ function renderLeafDirective(node, { showTodos, showNotes }) {
 
 function renderContainerDirective(node, { showTodos, showNotes }) {
   if (
-    (node.name == 'todo' && showTodos) ||
-    (node.name == 'note' && showNotes)
+    (node.name === 'todo' && showTodos) ||
+    (node.name === 'note' && showNotes)
   ) {
     const label = node.name.toUpperCase()
     const lines = nodeToLines({ showTodos: true })(node.children[0])
-      .map((line) => '  ' + line)  // indent
+      .map((line) => `  ${line}`)  // indent
     lines.unshift(`[${label}\n`)
     lines.push('\n]')
     return lines
@@ -223,3 +217,5 @@ function renderContainerDirective(node, { showTodos, showNotes }) {
 
   return null
 }
+
+// TODO consider grouping directive renderers by name instead of directive type

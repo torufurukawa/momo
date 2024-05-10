@@ -3,19 +3,25 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun --hot index.tsx example.md",
-    "build": "bun build ./index.tsx --compile --outfile ./out/momo"
+    "start": "bun --hot src/server.tsx tests/example.md",
+    "test": "bun test",
+    "dev": "bun test --watch",
+    "run": "bun src/server.tsx",
+    "build": "bun build src/server.tsx --compile --outfile ./out/momo"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.0"
+    "@types/react-dom": "^18.3.0",
+    "ts-toolbelt": "^9.6.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@types/minimist": "^1.2.5",
     "hastscript": "^9.0.0",
+    "minimist": "^1.2.8",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.2",
     "react-dom": "^18.3.1",

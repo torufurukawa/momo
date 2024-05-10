@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
+// TODO introduce container component
+
 export const Page = () => {
-  const [story, setStory] = useState('EMPTY');
+  // TODO remove empty
+  const [story, setStory] = useState(null);
 
   useEffect(() => {
     async function fetchStory() {
@@ -13,8 +16,10 @@ export const Page = () => {
     }
     fetchStory();
   }, []);
+  // TODO move this file to src directory
 
-  return <div>{story === 'EMPTY' ? <></> : <App story={story.story} />}</div>;
+  // TODO fix warnings
+  return <div>{story ? <App story={story.story} /> : <></>}</div>;
 };
 
 const root = createRoot(document.getElementById('app')!);
