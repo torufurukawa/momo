@@ -6,22 +6,12 @@ export default function App({ story }) {
   const [showTodos, setShowTodos] = useState(true)
   const [showNotes, setShowNotes] = useState(false)
   const [doubleSpace, setDoubleSpace] = useState(false)
-  const text = stringify(story.content, { showTodos, showNotes })
+  const state = { showTodos, setShowTodos, showNotes, setShowNotes, doubleSpace, setDoubleSpace };
+  const text = stringify(story.content, { showTodos, showNotes });
 
   return (
     <Container className="mt-4">
-      <div className="mt-2 mb-2">
-        {/* TODO extract controllers */}
-        <span className='badge rounded-pill bg-secondary'>{count} 字</span>
-        <CopyButton text={text} className='badge bg-primary ms-1'>
-          Copy
-        </CopyButton>
-        {/* TODO extract Form.Check */}
-        <Form.Check type="switch" label="Show TODOs" checked={showTodos} onChange={() => { setShowTodos(!showTodos) }} />
-        <Form.Check type="switch" label="Show notes" checked={showNotes} onChange={() => { setShowNotes(!showNotes) }} />
-        <Form.Check type="switch" label="Double spacing" checked={doubleSpace} onChange={() => { setDoubleSpace(!doubleSpace) }} />
-      </div>
-
+      <ControlPanel count={count} text={text} state={state} />
       <h1>{story.title}</h1>
       <Content showTodos={showTodos} doubleSpace={doubleSpace}>{text}</Content>
     </Container >
@@ -32,7 +22,31 @@ export default function App({ story }) {
 // Components
 //
 
-// TODO fix warnings
+function ControlPanel({ count, text, state }) {
+  return (
+    <div className="mt-2 mb-2">
+      <span className='badge rounded-pill bg-secondary'>{count} 字</span>
+      <CopyButton text={text} className='badge bg-primary ms-1'>
+        Copy
+      </CopyButton>
+      <div className="mt-2 mb-2">
+        <Switch label="Show TODOs" state={state.showTodos} setState={state.setShowTodos} />
+        <Switch label="Show notes" state={state.showNotes} setState={state.setShowNotes} />
+        <Switch label="Double spacing" state={state.doubleSpace} setState={state.setDoubleSpace} />
+      </div>
+    </div>
+  );
+}
+
+function Switch({ label, state, setState }) {
+  return (
+    <Form.Check
+      type="switch"
+      label={label}
+      checked={state}
+      onChange={() => { setState(!state) }} />
+  );
+}
 
 function CopyButton({ text, children, className }) {
   const target = useRef(null)
@@ -80,8 +94,6 @@ function CopyButton({ text, children, className }) {
   return el;
 }
 
-// TODO extract this component
-
 function Content({ children, doubleSpace }) {
   const style = {
     whiteSpace: 'break-spaces',
@@ -120,7 +132,6 @@ function countCharacters(content) {
   return count
 }
 
-// TODO extract this function
 function stringify(content, { showTodos, showNotes }) {
   const text = content.children
     .map(nodeToLines({ showTodos, showNotes }))
@@ -217,5 +228,3 @@ function renderContainerDirective(node, { showTodos, showNotes }) {
 
   return null
 }
-
-// TODO consider grouping directive renderers by name instead of directive type

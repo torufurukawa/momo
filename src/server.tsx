@@ -2,7 +2,14 @@ import { getStory } from './stories';
 import minimist from 'minimist';
 import { Router } from './router';
 
-// TODO log
+// @ts-ignore
+import mainJs from '../out/client.js.txt';
+// @ts-ignore
+import indexHtml from '../out/index.html.txt';
+// @ts-ignore
+import bootstrapCss from '../out/bootstrap-min.css.txt';
+
+const CLIENT_TARGET = '/client.js';
 
 // extract command line arguments
 const argv = minimist(Bun.argv.slice(2));
@@ -14,40 +21,29 @@ const sourcePath = argv._[0];
 
 // setup request handlers
 
-const INDEX_SOURCE = './src/client/index.html';
-const CLIENT_TRAGET = '/client.js';
-const CLIENT_SOURCE = './src/client/main.tsx';
-
 const router = new Router();
 
-router.get('/', async (req) => {
-  const indexFile = Bun.file(INDEX_SOURCE);
-  const indexContent = await indexFile.text();
-  const contentWithReactScript = indexContent.replace(
+// configure GET /
+const contentWithReactScript = indexHtml
+  .replace(
     '<!-- react-script -->',
-    `<script type="module" src="${CLIENT_TRAGET}"></script>`
-  );
+    `<script type="module" src="${CLIENT_TARGET}"></script>`
+  )
+  .replace('<!-- bootstrap -->', `<style>${bootstrapCss}</style>`);
+router.get('/', async (req) => {
   return new Response(contentWithReactScript, {
     headers: { 'Content-Type': 'text/html' },
   });
 });
 
-router.get(CLIENT_TRAGET, async (req) => {
-  const builds = await Bun.build({
-    entrypoints: [CLIENT_SOURCE],
-    target: 'browser',
-    minify: {
-      identifiers: true,
-      syntax: true,
-      whitespace: true,
-    },
-  });
-
-  return new Response(builds.outputs[0].stream(), {
-    headers: { 'Content-Type': builds.outputs[0].type },
+// configure GET ${CLIENT_TARGET} i.e. client-side JavaScript
+router.get(CLIENT_TARGET, async (req) => {
+  return new Response(mainJs, {
+    headers: { 'Content-Type': 'text/javascript' },
   });
 });
 
+// configure GET /story
 router.get('/story', (req) => {
   const story = getStory(sourcePath);
   return Response.json({ story });
@@ -59,4 +55,4 @@ Bun.serve({
   port: port,
   fetch: router.handle.bind(router),
 });
-console.log(`Listening on http://localhost:${port} ...`);
+console.info(`Listening on http://localhost:${port} ...`);

@@ -1,9 +1,6 @@
-// TODO clean
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
 import { unified } from 'unified';
 import { VFile } from 'vfile';
-import type { Data } from 'vfile';
 import remarkParse from 'remark-parse';
 import frontmatterExtract from 'remark-extract-frontmatter';
 import frontmatter from 'remark-frontmatter';
@@ -17,39 +14,32 @@ import type { Root } from 'mdast';
 // TODO define Story type
 
 export function getStory(sourcePath: string) {
-  const markdown = readMarkdown(sourcePath);
+  const text = fs.readFileSync(sourcePath, 'utf8');
+  const markdown = textToMarkdown(text);
+  const story = markdownToStory(markdown);
+  return story;
+}
+
+export function textToMarkdown(text: string) {
+  const input = new VFile(text);
+  const output = unified()
+    .use(remarkParse)
+    .use([frontmatter, [frontmatterExtract, { yaml: yaml.parse }]])
+    .use(remarkBreaks)
+    .use([remarkDirective, htmlDirective])
+    .use(jsonCompiler)
+    .processSync(input);
+  return output;
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+function markdownToStory(markdown: { data: any; result: any }) {
   const story = markdown.data;
   story.content = markdown.result;
   return story;
 }
 
-// TODO make this testable
-
-function readMarkdown(path: string) {
-  const text = fs.readFileSync(path, 'utf8');
-  const input = new VFile(text);
-  const output = unified()
-    .use(remarkParse)
-    .use([frontmatter, [frontmatterExtract, { yaml: yaml.parse }]])
-    .use(remarkBreaks)
-    .use([remarkDirective, htmlDirective])
-    .use(jsonCompiler)
-    .processSync(input);
-  return output;
-}
-
-export function processMarkdown(text: string) {
-  const input = new VFile(text);
-  const output = unified()
-    .use(remarkParse)
-    .use([frontmatter, [frontmatterExtract, { yaml: yaml.parse }]])
-    .use(remarkBreaks)
-    .use([remarkDirective, htmlDirective])
-    .use(jsonCompiler)
-    .processSync(input);
-  return output;
-}
-
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 function jsonCompiler(this: any) {
   Object.assign(this, { Compiler: (tree: Root) => tree });
 }

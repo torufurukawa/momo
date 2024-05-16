@@ -1,4 +1,3 @@
-// imitation Express
 type RequestHandler = (req: Request) => Response | Promise<Response>;
 
 interface RouteHandlers {
