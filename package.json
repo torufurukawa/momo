@@ -3,19 +3,51 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun --hot index.tsx example.md",
-    "build": "bun build ./index.tsx --compile --outfile ./out/momo"
+    "dev": "concurrently \"bun run dev:server\" \"bun run dev:client:js\"",
+    "dev:server": "npm-watch localserver",
+    "localserver": "bun --hot src/server.tsx tests/example.md",
+    "dev:client": "npm-watch build:client",
+    "dev:client:js": "bun run build:client:js -- --watch",
+    "test": "bun test",
+    "build": "bun run build:client && bun run build:server",
+    "build:server": "bun build src/server.tsx --compile --outfile ./out/momo",
+    "build:client": "bun run build:client:js && bun run build:client:html",
+    "build:client:js": "bun build src/client/main.tsx --outfile ./out/client.js.txt",
+    "build:client:html": "cp src/client/index.html ./out/index.html.txt && cp ./node_modules/bootstrap/dist/css/bootstrap.min.css ./out/bootstrap-min.css"
+  },
+  "watch": {
+    "dev:server": {
+      "patterns": [
+        "out"
+      ],
+      "extensions": "txt"
+    },
+    "dev:client": {
+      "patterns": [
+        "src/client"
+      ],
+      "extensions": "jsx,html,tsx"
+    }
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.0"
+    "@types/react-dom": "^18.3.0",
+    "bun-lightningcss": "^0.2.0",
+    "bun-types": "^1.1.8",
+    "concurrently": "^8.2.2",
+    "npm-watch": "^0.13.0",
+    "ts-toolbelt": "^9.6.0",
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@types/minimist": "^1.2.5",
+    "bootstrap": "^5.3.3",
     "hastscript": "^9.0.0",
+    "minimist": "^1.2.8",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.2",
     "react-dom": "^18.3.1",

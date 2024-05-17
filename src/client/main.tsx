@@ -3,18 +3,18 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 
 export const Page = () => {
-  const [story, setStory] = useState('EMPTY');
+  const [story, setStory] = useState(null);
 
   useEffect(() => {
     async function fetchStory() {
       const res = await fetch('/story');
       const data = await res.json();
-      setStory(data);
+      setStory(data.story);
     }
     fetchStory();
   }, []);
 
-  return <div>{story === 'EMPTY' ? <></> : <App story={story.story} />}</div>;
+  return <div>{story ? <App story={story} /> : <></>}</div>;
 };
 
 const root = createRoot(document.getElementById('app')!);
